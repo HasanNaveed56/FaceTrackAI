@@ -1,44 +1,126 @@
-# FaceTrack AI
+<div align="center">
 
-Face recognition attendance for staff. Everything runs on the local computer.
+<img src="https://capsule-render.vercel.app/api?type=waving&color=0:00ff99,100:0d1117&height=190&section=header&text=FaceTrack%20AI&fontSize=54&fontColor=ffffff&fontAlignY=40&desc=Face%20recognition%20attendance%20for%20teams&descSize=18&descAlignY=60&animation=fadeIn" alt="FaceTrack AI banner" />
 
-## Run
+![Python](https://img.shields.io/badge/Python-3.10+-0d1117?style=for-the-badge&logo=python&logoColor=00ff99)
+![FastAPI](https://img.shields.io/badge/FastAPI-0d1117?style=for-the-badge&logo=fastapi&logoColor=00ff99)
+![OpenCV](https://img.shields.io/badge/OpenCV-0d1117?style=for-the-badge&logo=opencv&logoColor=00ff99)
+![SQLite](https://img.shields.io/badge/SQLite-0d1117?style=for-the-badge&logo=sqlite&logoColor=00ff99)
 
-```
-run_server.bat         # Windows
+### [🚀 Live Demo](https://facetrackai-8630b.containers.snapdeploy.app/)
+
+*Employees, HR and admins check in and out with their face. No cards, no passwords at the door.*
+
+</div>
+
+---
+
+## ✨ Features
+
+| | |
+|---|---|
+| 🧑‍💻 **Face check-in / check-out** | Each person is verified against their own enrolled face. |
+| 🔐 **Role-based accounts** | Separate register and login for Employee, HR and Admin. |
+| ⏰ **Attendance rules** | Check-in closes at **09:15** (later = no attendance), check-out opens at **16:45**. |
+| 🗓️ **Off days** | Sundays, public holidays and department-wise off announcements are blocked automatically. |
+| 📝 **Leave workflow** | Employees apply with title, reason and dates; HR approves. HR's own leaves go to Admin. |
+| ⚠️ **Staff control** | Admin can warn, fire or retain staff. Fired accounts lose access immediately. |
+
+---
+
+## 👥 Dashboards
+
+### 🧑 Employee
+- Check in / out with the camera and a live clock
+- Own attendance with date and time down to the second
+- Leave requests and their status
+- Company rules: yearly holidays, Sunday off, leave policy
+- Warnings and upcoming offs
+
+### 🧑‍💼 HR
+- Today's check-ins and check-outs for every employee (Present, Not yet, Absent, On leave, Off)
+- Off announcements for one department or everyone
+- Leave requests with the employee's department, Approve / Reject
+
+### 🛡️ Admin
+- Monitors both HR and employees
+- Warn (with a reason), Fire or Retain any staff member
+- See every leave and off announcement, and how many leaves each HR has decided
+
+---
+
+## 🚀 Run locally
+
+```bash
 ./run_server.sh        # macOS / Linux
+run_server.bat         # Windows
 ```
 
-Open http://localhost:8000. First run downloads two pretrained models (about 40 MB). Python 3.10+. The camera only works on `localhost` or HTTPS.
+Open **http://localhost:8000**. The first run installs the dependencies and downloads two pretrained models (about 40 MB) from the OpenCV Zoo. Python 3.10 or newer is required. The camera only works on `localhost` or HTTPS.
 
-## How it works
+**HR and admin sign-up** needs a staff code. Set your own before going live:
 
-- **Login is by face only.** There are no passwords. The login screen opens the camera and logs you in when your face matches a registered account.
-- **Register** (name, staff code, one camera photo; up to 2 more are optional). Fields depend on the role:
-  - Employee: name, staff code, department.
-  - HR / Admin: name, staff code, registration key (env `REGISTRATION_KEY`, default `facetrack-staff`). No department.
-- **Attendance camera (HR only).** HR starts and stops it from the *Attendance camera* page. While it is on, every registered face it sees is marked automatically: first sighting until 09:15 = check-in, a sighting from 16:45 = check-out. After 09:15 with no check-in = no attendance. Sundays, listed holidays, HR-announced offs and approved leave are skipped. The camera keeps running while HR uses other pages, and stops on Stop or Logout.
-- **Dashboards**
-  - Employee: My attendance, Leave, Company rules.
-  - HR: Today, Attendance camera, Off announcements, Leave requests, My attendance, Company rules.
-  - Admin: Overview, Staff control (warn / fire / retain), Leaves, Off announcements, Company rules.
-- Employee leaves go to HR, HR leaves go to admin.
+```bash
+STAFF_CODE="your-secret-code" ./run_server.sh      # default: facetrack-staff
+```
 
-## Recognition
+---
 
-YuNet detects faces and landmarks, SFace aligns and embeds them (128 numbers), and the embedding is matched by cosine similarity. Attendance matching uses 0.363 (the OpenCV recommendation); face login uses a stricter 0.45 and must beat the runner-up by 0.05. Registration rejects blurry or distant photos and a face that matches an existing account at 0.55 or more.
-
-Files: `app/face_engine.py` (recognition), `app/database.py` (SQLite), `main.py` (API), `static/` (interface).
-
-## Limits
-
-- No liveness detection: a printed photo or phone screen can fool the camera and the face login. Run the attendance camera where a person can see it.
-- Face login opens an account, so keep `REGISTRATION_KEY` secret and change the default before real use.
-- `data/facetrack.db` stores face embeddings and a small face crop per person. Treat it as personal data.
-- If an older database (email/password version) is found, it is kept as `data/facetrack.old.db` and a new one is created.
-
-## Tests
+## 🧠 How recognition works
 
 ```
-python -m unittest discover tests
+Camera frame ──► YuNet (detect face + 5 landmarks) ──► SFace (align + embed)
+                                                          │
+                          cosine similarity with the logged-in user's face
+                                                          │
+                              ≥ 0.363  ──►  check-in / check-out recorded
 ```
+
+1. **YuNet** finds exactly one face and its landmarks.
+2. **SFace** aligns the face and produces an embedding.
+3. The embedding is compared with the logged-in user's enrolled face. It must score at least **0.363**, the threshold recommended by OpenCV for SFace.
+4. Registration rejects blurry or distant faces, photos with more than one face, and a face that is already registered under another account.
+
+---
+
+## 🗂️ Project structure
+
+```
+FaceTrackAI/
+├── main.py              # FastAPI: auth, attendance, leaves, offs, admin
+├── app/
+│   ├── face_engine.py   # detection and recognition
+│   └── database.py      # SQLite schema
+├── static/              # index.html, style.css, app.js (dashboards)
+├── models/              # YuNet and SFace ONNX models
+└── tests/               # face engine + role-flow tests
+```
+
+---
+
+## ⚠️ Limits
+
+- **No liveness detection.** A printed photo or a phone screen can fool it. Use it with a person supervising.
+- Passwords are stored as salted PBKDF2 hashes, but serve the app over **HTTPS** and change `STAFF_CODE` before exposing it.
+- `data/facetrack.db` holds each person's face embedding and a small cropped photo. Treat it as personal data.
+- Accuracy depends on lighting and camera quality. Tune `MATCH_THRESHOLD` in `app/face_engine.py` on your own team.
+- Eid and other moon-based holidays are not hardcoded; HR announces them as offs.
+
+---
+
+## 🧪 Tests
+
+```bash
+python tests/test_face_engine.py     # matching logic, no models needed
+python tests/test_api.py             # role flow with a fake face engine
+```
+
+---
+
+<div align="center">
+
+Built by [Hasan Naveed](https://github.com/HasanNaveed56) · **Code. Create. Innovate.**
+
+<img src="https://capsule-render.vercel.app/api?type=waving&color=0:0d1117,100:00ff99&height=100&section=footer" alt="Footer" />
+
+</div>
