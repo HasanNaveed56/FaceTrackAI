@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FaceTrack AI</title>
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-scan" viewBox="0 0 24 24"><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2"/><circle cx="12" cy="10" r="3"/><path d="M7 17c1-2.5 3-3.5 5-3.5s4 1 5 3.5"/></symbol>
+  <symbol id="i-users" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.8"/></symbol>
+  <symbol id="i-list" viewBox="0 0 24 24"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></symbol>
+  <symbol id="i-camera" viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></symbol>
+  <symbol id="i-upload" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></symbol>
+  <symbol id="i-download" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-trash" viewBox="0 0 24 24"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
+  <symbol id="i-alert" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></symbol>
+  <symbol id="i-play" viewBox="0 0 24 24"><path d="M6 4l14 8-14 8z"/></symbol>
+  <symbol id="i-stop" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="1"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></symbol>
+</svg>
+
+<div id="auth" class="auth" hidden>
+  <div class="card auth-card">
+    <div class="brand">FaceTrack<span> AI</span></div>
+    <div id="banner" class="banner" hidden></div>
+    <div class="seg"><button class="on" data-m="login">Face login</button><button data-m="register">Register</button></div>
+    <div id="loginPane" class="stack">
+      <div class="video-wrap"><video id="loginVideo" playsinline muted></video><div class="video-idle"><svg class="ic big"><use href="#i-camera"/></svg><p>Camera is off</p></div></div>
+      <div id="loginStatus" class="result" hidden></div>
+      <button type="button" class="btn ghost full" id="loginCam">Start camera</button>
+      <p class="muted">Look straight at the camera. You are logged in automatically when your face is recognised.</p>
+    </div>
+    <form id="regForm" hidden>
+      <label>Role<select name="role" id="regRole"><option value="employee">Employee</option><option value="hr">HR</option><option value="admin">Admin</option></select></label>
+      <label>Full name<input name="name" required maxlength="100" autocomplete="off"></label>
+      <label>Staff code<input name="staff_code" required maxlength="20" placeholder="e.g. EMP-101" autocomplete="off"></label>
+      <label id="deptLabel">Department<select name="department" id="regDept"></select></label>
+      <label id="keyLabel" hidden>Registration key<input name="key" type="password" autocomplete="off"></label>
+      <div class="video-wrap small"><video id="regVideo" playsinline muted></video><div class="video-idle"><svg class="ic big"><use href="#i-camera"/></svg><p>Take your photo (you can add up to 2 more for better accuracy)</p></div></div>
+      <div class="row"><button type="button" class="btn ghost" id="regCam">Open camera</button><button type="button" class="btn ghost" id="regShot" disabled>Capture</button></div>
+      <div id="regSamples" class="samples"></div>
+      <button class="btn primary full" id="regSubmit" disabled>Create account</button>
+    </form>
+  </div>
+</div>
+<div id="shell" class="shell" hidden>
+  <aside class="side">
+    <div class="brand">FaceTrack<span> AI</span></div>
+    <div class="who"><img id="meImg" alt=""><div><b id="meName"></b><small id="meRole"></small></div></div>
+    <nav id="nav"></nav>
+    <div id="camBadge" class="cam-badge" hidden><i></i>Camera live</div>
+    <button class="btn ghost" id="logout">Logout</button>
+  </aside>
+  <main><div id="msg" class="banner" hidden></div><div id="view"></div></main>
+  <div class="kiosk-hidden" aria-hidden="true"><video id="kioskVideo" playsinline muted></video></div>
+</div>
+<script src="/static/app.js"></script>
+</body>
+</html>
